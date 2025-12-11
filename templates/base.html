@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EasyTime{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #eef2ff;
+        }
+
+        .navbar {
+            background: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 600;
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .menu a {
+            margin-right: 25px;
+            text-decoration: none;
+            font-size: 16px;
+            color: #1e3a8a;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #ef4444;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+        /* Área de conteúdo */
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        /* Cards usados na home */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: .2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            margin-bottom: 10px;
+            color: #1e3a8a;
+        }
+
+        .card p {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        <a class="logo" href="{% url 'home' %}">EasyTime</a>
+
+        {% if user.is_authenticated %}
+        <div class="menu">
+            <a href="{% url 'home' %}">Dashboard</a>
+            <a href="{% url 'agendamentos:listar'%}">Agendamentos</a>
+            <a href="#">Serviços</a>
+            <a href="#">Funcionários</a>
+        </div>
+
+        <a href="{% url 'logout' %}" class="logout-btn">Sair</a>
+        {% endif %}
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>

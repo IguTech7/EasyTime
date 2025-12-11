@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - EasyTime{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h2>Bem-vindo(a), {{ user.username }}! 👋</h2>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Agendamentos</h3>
+            <p>15</p>
+        </div>
+
+        <div class="card">
+            <h3>Usuários</h3>
+            <p>8</p>
+        </div>
+
+        <div class="card">
+            <h3>Serviços</h3>
+            <p>4</p>
+        </div>
+
+        <div class="card">
+            <h3>Funcionários</h3>
+            <p>3</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
