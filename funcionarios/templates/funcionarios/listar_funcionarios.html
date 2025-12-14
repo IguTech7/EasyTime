@@ -1,0 +1,55 @@
+{% extends 'painel/base.html' %}
+
+{% block title %}Gestão de Funcionários{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestão de Funcionários</h1>
+    
+    <a href="{% url 'funcionarios:criar' %}" class="btn btn-primary mb-3">
+        <i class="fas fa-plus"></i> Novo Funcionário (Detalhes)
+    </a>
+    <p class="text-muted small">Nota: A criação inicial de usuários deve ser feita pelo Django Admin.</p>
+
+    {% if funcionarios %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Especialidade</th>
+                    <th>Telefone</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for funcionario in funcionarios %}
+                <tr>
+                    <td>{{ funcionario.nome }}</td>
+                    <td>{{ funcionario.especialidade }}</td>
+                    <td>{{ funcionario.telefone }}</td>
+                    <td>{{ funcionario.get_status_display }}</td>
+                    <td>
+                        <a href="{% url 'funcionarios:editar' funcionario.pk %}" class="btn btn-sm btn-info me-2" title="Editar Detalhes">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{% url 'funcionarios:excluir' funcionario.pk %}" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir o perfil de {{ funcionario.nome }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger" title="Excluir Perfil">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+        Nenhum perfil de funcionário cadastrado.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

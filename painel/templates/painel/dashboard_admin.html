@@ -1,0 +1,57 @@
+{% extends 'painel/base.html' %}
+
+{% block title %}Dashboard Administrativo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-chart-line"></i> Dashboard</h2>
+    <p class="lead">Bem-vindo(a), {{ request.user.first_name|default:request.user.username }}!</p>
+    <p class="text-muted">Painel de Administração e Gestão de Agendamentos</p>
+    
+    <div class="row mt-4">
+
+        <div class="col-md-4 mb-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="far fa-calendar-check"></i> Agendamentos Hoje</h5>
+                    <p class="card-text fs-3">{{ agendamentos_hoje.count|default:0 }}</p>
+                    <a href="{% url 'agendamentos:agenda' %}" class="btn btn-sm btn-light">Ver Agenda Completa</a>
+                </div>
+            </div>
+        </div>
+
+        {% if request.user.is_staff %}
+        <div class="col-md-4 mb-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-user-tie"></i> Total de Profissionais</h5>
+                    <p class="card-text fs-3">{{ total_funcionarios|default:0 }}</p>
+                    <a href="{% url 'funcionarios:listar' %}" class="btn btn-sm btn-light">Gerenciar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-cut"></i> Total de Serviços</h5>
+                    <p class="card-text fs-3">{{ total_servicos|default:0 }}</p>
+                    <a href="{% url 'servicos:listar' %}" class="btn btn-sm btn-light">Gerenciar</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+    </div>
+    
+    <hr class="my-4">
+
+    <h3><i class="far fa-clock"></i> Próximos Agendamentos (Hoje)</h3>
+    {% if agendamentos_hoje %}
+        {% include 'agendamentos/tabela_agendamentos.html' with agendamentos=agendamentos_hoje %}
+    {% else %}
+        <div class="alert alert-success">Nenhum agendamento ativo para hoje.</div>
+    {% endif %}
+
+</div>
+{% endblock %}

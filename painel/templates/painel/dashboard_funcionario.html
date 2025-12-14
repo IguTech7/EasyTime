@@ -1,81 +1,45 @@
-{% extends 'base.html' %}
+{% extends 'painel/base.html' %}
+{% load static %}
+
+{% block title %}Agenda Rápida{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+    
+    <h2 class="mb-4">
+        <i class="fas fa-calendar-day me-2 text-primary"></i>Dashboard do Funcionário
+    </h2>
 
-    <h2 class="mb-4">Dashboard - Funcionário</h2>
+    <div class="alert alert-info p-3 shadow-sm mb-4">
+        <i class="fas fa-user-tie me-2"></i>
+        Bem-vindo(a), {{ request.user.first_name|default:request.user.username }}!
+        Seu foco é na <a href="{% url 'agendamentos:agenda' %}" class="alert-link fw-bold">Agenda de Hoje</a>.
+    </div>
 
-    <div class="row">
-        <!-- Agendamentos de hoje -->
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Agendamentos de Hoje</h6>
-                <h3>{{ agendamentos_hoje }}</h3>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 text-center bg-primary text-white">
+                <h5 class="card-title fw-bold">Ver Agendamentos de Hoje</h5>
+                <p class="card-text">Clique para gerenciar seus serviços agendados para este dia.</p>
+                <a href="{% url 'agendamentos:agenda' %}" class="btn btn-light btn-lg mt-3">
+                    <i class="fas fa-clock me-2"></i> Abrir Minha Agenda
+                </a>
             </div>
         </div>
-
-        <!-- Semana -->
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Agendamentos da Semana</h6>
-                <h3>{{ agendamentos_semana }}</h3>
-            </div>
-        </div>
-
-        <!-- Clientes atendidos -->
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Clientes Atendidos</h6>
-                <h3>{{ clientes_atendidos }}</h3>
-            </div>
-        </div>
-
-        <!-- Avaliações -->
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Avaliações</h6>
-                <h3>{{ media_avaliacoes }}</h3>
+        
+        <div class="col-md-6">
+             <div class="card shadow-sm p-4 text-center">
+                <h5 class="card-title text-muted">Próximos 7 Dias</h5>
+                <p class="display-4 fw-bold text-secondary">0</p>
+                <p class="text-muted">Agendamentos próximos</p>
             </div>
         </div>
     </div>
-
-    <hr>
-
-    <h4>Próximos Atendimentos</h4>
-    <div class="card shadow-sm">
-        <div class="table-responsive p-3">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Serviço</th>
-                        <th>Data</th>
-                        <th>Horário</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for a in proximos_agendamentos %}
-                    <tr>
-                        <td>{{ a.cliente.nome }}</td>
-                        <td>{{ a.servico.nome }}</td>
-                        <td>{{ a.data }}</td>
-                        <td>{{ a.horario }}</td>
-                        <td>{{ a.status }}</td>
-                        <td>
-                            <a href="#" class="btn btn-sm btn-primary">Ver</a>
-                            <a href="#" class="btn btn-sm btn-success">Confirmar</a>
-                            <a href="#" class="btn btn-sm btn-danger">Cancelar</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="6" class="text-center">Nenhum agendamento</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    
+    <h3 class="mb-3">Configurações Rápidas</h3>
+    <div class="card shadow-sm p-4">
+        <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-cog me-2"></i> Acessar Painel de Administração
+        </a>
     </div>
 
-</div>
 {% endblock %}

@@ -1,113 +1,34 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <style>
-        body {
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+{% extends 'base_auth.html' %}
 
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.15);
-            width: 380px;
-        }
+{% block title %}Login | EasyTime{% endblock %}
 
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #444;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        button {
-            width: 100%;
-            background-color: #4CAF50;
-            border: none;
-            padding: 12px;
-            color: white;
-            border-radius: 5px;
-            font-size: 15px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45A049;
-        }
-
-        .cadastro-link {
-            margin-top: 14px;
-            text-align: center;
-            display: block;
-            font-size: 14px;
-        }
-
-        .cadastro-link a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .cadastro-link a:hover {
-            text-decoration: underline;
-        }
-
-        .erro {
-            background: #ffdddd;
-            color: #a30000;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h2>Entrar</h2>
-
-    {% if erro %}
-        <div class="erro">{{ erro }}</div>
-    {% endif %}
-
-    <form method="POST">
-        {% csrf_token %}
+{% block content %}
+    <div class="card p-4 shadow-sm" style="max-width: 400px; margin: 50px auto;">
+        <h3 class="text-center mb-4 text-primary fw-bold">Entrar</h3>
         
-        <label>Usuário:</label>
-        <input type="text" name="username">
+        {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+                Seu nome de usuário e senha não corresponderam. Tente novamente.
+            </div>
+        {% endif %}
 
-        <label>Senha:</label>
-        <input type="password" name="password">
-
-        <button type="submit">Login</button>
-    </form>
-
-    <div class="cadastro-link">
-        <span>Não tem uma conta? <a href="{% url 'usuarios:cadastro' %}">Cadastre-se</a></span>
-</div>
-
-</body>
-</html>
+        <form method="post" action="{% url 'usuarios:login' %}">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn btn-primary w-100 mt-3">Entrar</button>
+            <input type="hidden" name="next" value="{{ next }}" />
+        </form>
+        
+        <p class="text-center mt-4">
+            Não tem conta? <a href="{% url 'usuarios:cadastro' %}" class="text-decoration-none fw-bold">Cadastre-se aqui</a>
+        </p>
+    </div>
+{% endblock %}

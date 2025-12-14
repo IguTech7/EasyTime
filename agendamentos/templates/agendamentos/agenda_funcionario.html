@@ -1,0 +1,78 @@
+{% extends 'painel/base.html' %}
+{% load static %}
+
+{% block title %}Minha Agenda{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Agenda de Trabalho ({{ hoje|date:"d/m/Y" }})</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if agendamentos_hoje %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">Horário</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Serviço</th>
+                        <th scope="col">Detalhes</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agendamento in agendamentos_hoje %}
+                    <tr>
+                        <td class="fw-bold">{{ agendamento.data_horario|time:"H:i" }}</td>
+                        <td>{{ agendamento.usuario.username }}</td>
+                        <td>{{ agendamento.servico.nome }}</td>
+                        <td>{{ agendamento.observacoes|default:"Nenhuma observação" }}</td>
+                        <td>
+                            {% if agendamento.status == 'agendado' or agendamento.status == 'pendente' %}
+                                <span class="badge bg-primary">{{ agendamento.get_status_display }}</span>
+                            {% elif agendamento.status == 'realizado' %}
+                                <span class="badge bg-success">{{ agendamento.get_status_display }}</span>
+                            {% elif agendamento.status == 'cancelado' %}
+                                <span class="badge bg-danger">{{ agendamento.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if agendamento.status == 'agendado' or agendamento.status == 'pendente' %}
+                                <form action="{% url 'agendamentos:concluir' pk=agendamento.pk %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm me-2" onclick="return confirm('Confirmar conclusão do serviço?');">
+                                        <i class="fas fa-check-circle me-1"></i>Concluir
+                                    </button>
+                                </form>
+                                
+                                <form action="{% url 'agendamentos:cancelar_funcionario' pk=agendamento.pk %}" method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning text-dark btn-sm" onclick="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+                                        <i class="fas fa-times-circle me-1"></i>Cancelar
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted fst-italic">{{ agendamento.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-success mt-4" role="alert">
+            <h4 class="alert-heading">Que ótimo!</h4>
+            <p>Você não possui agendamentos ativos marcados para hoje.</p>
+        </div>
+    {% endif %}
+
+{% endblock %}

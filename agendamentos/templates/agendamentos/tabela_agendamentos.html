@@ -1,0 +1,65 @@
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>Horário</th>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th>Duração</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for agendamento in agendamentos %}
+            <tr>
+                <td>{{ agendamento.data_horario|date:"H:i" }}</td>
+                <td>{{ agendamento.usuario.get_full_name|default:agendamento.usuario.username }}</td>
+                <td>{{ agendamento.servico.nome }}</td>
+                <td>{{ agendamento.servico.duracao }} minutos</td>
+                
+                <td>
+                    {% if agendamento.status == 'AG' %}
+                        <span class="badge bg-primary">{{ agendamento.get_status_display }}</span>
+                    {% elif agendamento.status == 'PE' %}
+                        <span class="badge bg-warning text-dark">{{ agendamento.get_status_display }}</span>
+                    {% elif agendamento.status == 'CA' %}
+                        <span class="badge bg-danger">{{ agendamento.get_status_display }}</span>
+                    {% elif agendamento.status == 'RE' %}
+                        <span class="badge bg-success">{{ agendamento.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ agendamento.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                
+                <td>
+                    
+                    {% if agendamento.status == 'PE' %}
+                        <form method="post" action="{% url 'agendamentos:confirmar_agendamento' pk=agendamento.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-primary me-2">
+                                Confirmar
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if agendamento.status != 'RE' and agendamento.status != 'CA' %}
+                        <form method="post" action="{% url 'agendamentos:marcar_realizado' pk=agendamento.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success me-2">
+                                Realizado
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{% url 'agendamentos:detalhes' agendamento.pk %}" class="btn btn-sm btn-info me-2">Detalhes</a>
+                    
+                    {% if agendamento.status != 'CA' and agendamento.status != 'RE' %}
+                    <a href="{% url 'agendamentos:cancelar' agendamento.pk %}" class="btn btn-sm btn-warning" onclick="return confirm('Tem certeza que deseja cancelar este agendamento?')">Cancelar</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

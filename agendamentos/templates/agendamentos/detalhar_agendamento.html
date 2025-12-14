@@ -1,0 +1,53 @@
+{% extends 'painel/base.html' %}
+{% load static %}
+{% block title %}Detalhes do Agendamento{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Detalhes do Agendamento #{{ agendamento.pk }}</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <h5 class="mt-0 border-bottom pb-2">Cliente</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>Nome:</strong> {{ agendamento.usuario.get_full_name|default:agendamento.usuario.username }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ agendamento.usuario.email }}</li>
+                        </ul>
+
+                    <h5 class="border-bottom pb-2">Informações do Agendamento</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item"><strong>Serviço:</strong> {{ agendamento.servico.nome }}</li>
+                        <li class="list-group-item"><strong>Data e Horário:</strong> {{ agendamento.data_horario|date:"d/m/Y H:i" }}</li>
+                        <li class="list-group-item">
+                            <strong>Status:</strong> 
+                            {% if agendamento.status == 'AG' %}
+                                <span class="badge bg-primary">{{ agendamento.get_status_display }}</span>
+                            {% elif agendamento.status == 'PE' %}
+                                <span class="badge bg-warning text-dark">{{ agendamento.get_status_display }}</span>
+                            {% elif agendamento.status == 'RE' %}
+                                <span class="badge bg-success">{{ agendamento.get_status_display }}</span>
+                            {% elif agendamento.status == 'CA' %}
+                                <span class="badge bg-danger">{{ agendamento.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ agendamento.get_status_display }}</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="card-footer text-end">
+                    <a href="{% url 'agendamentos:agenda' %}?data={{ agendamento.data_horario|date:'Y-m-d' }}" class="btn btn-secondary me-2">Voltar para a Agenda</a>
+                    
+                    {% if agendamento.status != 'CA' and agendamento.status != 'RE' and request.user.is_staff or request.user.tipo == 'funcionario' %}
+                        <a href="{% url 'agendamentos:cancelar' agendamento.pk %}" class="btn btn-warning" onclick="return confirm('Tem certeza que deseja cancelar este agendamento?')">Cancelar Agendamento</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

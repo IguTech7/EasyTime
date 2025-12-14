@@ -1,0 +1,80 @@
+{% extends 'painel/base.html' %} 
+{% block title %}Meu Painel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+    <p class="lead">Bem-vindo(a), {{ request.user.first_name|default:request.user.username }}!</p>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-center h-100 border-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total de Agendamentos Futuros</h5>
+                    <p class="card-text display-4 text-primary">{{ total_agendamentos }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Próximo Agendamento</h5>
+                    {% with next_agendamento=agendamentos_ativos.first %}
+                        {% if next_agendamento %}
+                            <p class="card-text fs-4">{{ next_agendamento.servico.nome }}</p>
+                            <p class="text-muted">{{ next_agendamento.data_horario|date:"d/m/Y H:i" }}</p>
+                        {% else %}
+                            <p class="card-text text-muted">Nenhum registro encontrado.</p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card text-center h-100 bg-primary text-white">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title">Novo Agendamento</h5>
+                    <a href="{% url 'agendamentos:criar' %}" class="btn btn-light btn-lg mt-2">Agendar Agora</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <hr class="my-4">
+
+    <h3 class="mb-3"><i class="fas fa-list-ul"></i> Nossos Serviços Disponíveis</h3>
+    {% if servicos %}
+        <div class="row">
+            {% for servico in servicos %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-success">{{ servico.nome }}</h5>
+                        <p class="card-text text-muted flex-grow-1">{{ servico.descricao|truncatechars:100 }}</p>
+                        <ul class="list-unstyled mt-auto">
+                            <li><strong>Duração:</strong> {{ servico.duracao }} minutos</li>
+                            <li><strong>Preço:</strong> R$ {{ servico.preco|floatformat:2 }}</li>
+                        </ul>
+                        <a href="{% url 'agendamentos:criar' %}?servico={{ servico.pk }}" class="btn btn-sm btn-outline-primary mt-2">Agendar Este Serviço</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">Nenhum serviço disponível no momento.</div>
+    {% endif %}
+
+    <hr class="my-4">
+    
+    <h3 class="mb-3"><i class="far fa-calendar-alt"></i> Próximos Agendamentos</h3>
+    {% if agendamentos_ativos %}
+        {% include 'agendamentos/tabela_agendamentos.html' with agendamentos=agendamentos_ativos %}
+    {% else %}
+        <div class="alert alert-info">Você não possui agendamentos futuros. Agende um serviço agora!</div>
+    {% endif %}
+
+</div>
+{% endblock %}

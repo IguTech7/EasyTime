@@ -1,29 +1,24 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.views import LoginView as BaseLoginView
+from .forms import CustomAuthenticationForm, CustomUserCreationForm
 
-def login_usuario(request):
+class LoginView(BaseLoginView):
+    template_name = 'usuarios/login.html'
+    authentication_form = CustomAuthenticationForm
+
+def cadastro(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-
-        user = authenticate(request, username=username, password=password)
-
-        if user:
-            login(request, user)
-            return redirect('painel:dashboard')
-
-    return render(request, 'usuarios/login.html')
-
-
-def logout_usuario(request):
-    logout(request)
-    return redirect('usuarios:login')
-
-def cadastro_usuario(request):
-    return render(request, 'usuarios/cadastro.html')
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        # Aqui você pode adicionar lógica para criar o usuário
-        # Por simplicidade, vamos redirecionar para a página de login
-        return redirect('usuarios:login')
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save() 
+            
+            messages.success(request, 'Cadastro realizado com sucesso! Faça login para continuar.')
+            return redirect('usuarios:login')
+        else:
+            messages.error(request, 'Erro no cadastro. Verifique os dados fornecidos.')
+    else:
+        form = CustomUserCreationForm()
+        
+    context = {'form': form}
+    return render(request, 'usuarios/cadastro.html', context)

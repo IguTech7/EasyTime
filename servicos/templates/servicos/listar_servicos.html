@@ -1,0 +1,52 @@
+{% extends 'painel/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Gestão de Serviços</h1>
+    
+    <a href="{% url 'servicos:criar' %}" class="btn btn-primary mb-3">
+        <i class="fas fa-plus"></i> Novo Serviço
+    </a>
+
+    {% if servicos %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Descrição</th>
+                    <th>Preço</th>
+                    <th>Duração (min)</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servico in servicos %}
+                <tr>
+                    <td>{{ servico.nome }}</td>
+                    <td>{{ servico.descricao|truncatechars:50 }}</td>
+                    <td>R$ {{ servico.preco|floatformat:2 }}</td>
+                    <td>{{ servico.duracao }}</td>
+                    <td>
+                        <a href="{% url 'servicos:editar' servico.pk %}" class="btn btn-sm btn-info me-2" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{% url 'servicos:excluir' servico.pk %}" method="post" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir o serviço {{ servico.nome }}? Esta ação não pode ser desfeita.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+        Nenhum serviço cadastrado.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'painel/base.html' %}
+
+{% block title %}Novo Agendamento{% endblock %}
+
+{% block content %}
+    <h2>Novo Agendamento</h2>
+    
+    <div style="max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+        <form method="POST" style="font-family: 'Poppins', sans-serif;">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div style="margin-bottom: 20px;">
+                    <label for="{{ field.id_for_label }}" style="display: block; font-weight: 500; color: #374151; margin-bottom: 5px;">
+                        {{ field.label }}:
+                    </label>
+                    
+                    {{ field }}
+                    
+                    {% if field.help_text %}
+                        <small style="color: #6b7280; display: block; margin-top: 5px;">{{ field.help_text }}</small>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                        <p style="color: #ef4444; margin-top: 5px; font-size: 14px;">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" style="background-color: #2563eb; color: white; padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; transition: background-color 0.2s;">
+                Agendar Serviço
+            </button>
+        </form>
+    </div>
+
+    <style>
+        input[type="text"], input[type="email"], input[type="date"], input[type="time"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%236B7280"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 1em;
+        }
+    </style>
+{% endblock content %}

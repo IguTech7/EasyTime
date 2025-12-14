@@ -1,0 +1,17 @@
+{% extends 'painel/base.html' %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Agenda do Dia - {{ hoje|date:"d/m/Y" }}</h2>
+    <hr>
+
+    {% if agendamentos %}
+        {% include 'agendamentos/tabela_agendamentos.html' with agendamentos=agendamentos %}
+    {% else %}
+        <div class="alert alert-info">Nenhum agendamento ativo encontrado para hoje.</div>
+    {% endif %}
+    
+    </div>
+{% endblock %}

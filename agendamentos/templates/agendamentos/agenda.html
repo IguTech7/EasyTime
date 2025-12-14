@@ -1,0 +1,36 @@
+{% extends 'painel/base.html' %}
+{% load static %}
+{% block title %}Agenda{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    
+    <h2>Agenda - {{ data_selecionada|date:"d/m/Y" }}</h2>
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-4">
+            <form method="get" action="{% url 'agendamentos:agenda' %}" id="form-data-filtro">
+                <label for="id_data" class="form-label">Selecionar Outra Data:</label>
+                <input type="date" 
+                       id="id_data" 
+                       name="data" 
+                       class="form-control" 
+                       value="{{ data_selecionada|date:'Y-m-d' }}"
+                       onchange="this.form.submit()">
+            </form>
+        </div>
+        <div class="col-md-8 text-end">
+            <p class="text-muted">Total de agendamentos para esta data: **{{ agendamentos|length }}**</p>
+        </div>
+    </div>
+
+    {% if agendamentos %}
+        {% include 'agendamentos/tabela_agendamentos.html' with agendamentos=agendamentos %}
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Nenhum agendamento ativo para a data selecionada ({{ data_selecionada|date:"d/m/Y" }}).
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
