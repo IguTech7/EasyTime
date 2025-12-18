@@ -1,59 +1,53 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import never_cache
-from agendamentos.models import Agendamento, Servico, Funcionario
-from datetime import date, datetime, time
+from agendamentos.models import Agendamento
+from funcionarios.models import Funcionario
+from servicos.models import Servico
+from django.utils import timezone
+from datetime import date
 
-def home(request):
-    if request.user.is_authenticated:
-        return redirect('painel:dashboard')
-    return render(request, 'painel/home_page.html')
-
-@never_cache
-@login_required(login_url='usuarios:login')
+@login_required
 def dashboard(request):
+    # Pega a data e hora atual do servidor local (Brasil)
+    agora = timezone.localtime(timezone.now())
+    hoje = agora.date()
     context = {}
-    hoje = date.today()
-    
+
+    # --- LÓGICA PARA CLIENTE ---
     if request.user.tipo == 'cliente':
-        total_futuros = Agendamento.objects.filter(
-            usuario=request.user, 
-            data_horario__date__gte=hoje
-        ).exclude(status='CA').count()
+        # Busca agendamentos do cliente logado que NÃO foram cancelados
+        agendamentos_cliente = Agendamento.objects.filter(
+            usuario=request.user
+        ).exclude(status='CA')
 
-        proximos_agendamentos = Agendamento.objects.filter(
-            usuario=request.user, 
-            data_horario__date__gte=hoje
-        ).exclude(status='CA').order_by('data_horario')
+        # Filtra apenas agendamentos de hoje para o futuro
+        futuros = agendamentos_cliente.filter(data_horario__date__gte=hoje)
+        
+        # Variáveis que o seu HTML utiliza
+        context['total_futuros'] = futuros.count()
+        context['proximo_agendamento'] = futuros.order_by('data_horario').first()
+        context['proximos_agendamentos'] = futuros.order_by('data_horario') # Para a lista lá de baixo
+        context['servicos_disponiveis'] = Servico.objects.all()
 
-        servicos_disponiveis = Servico.objects.all()
-
-        context.update({
-            'total_futuros': total_futuros,
-            'proximo_agendamento': proximos_agendamentos.first(), 
-            'proximos_agendamentos': proximos_agendamentos[:3],
-            'servicos_disponiveis': servicos_disponiveis,
-        })
-        
-    elif request.user.tipo == 'funcionario' or request.user.is_staff:
-        
-        inicio_do_dia = datetime.combine(hoje, time.min)
-        fim_do_dia = datetime.combine(hoje, time.max)
-        
+    # --- LÓGICA PARA PROFISSIONAL / FUNCIONÁRIO / STAFF ---
+    elif request.user.tipo == 'funcionario' or request.user.tipo == 'profissional' or request.user.is_staff:
+        # Busca todos os agendamentos do dia atual (independente da hora)
         agendamentos_hoje = Agendamento.objects.filter(
-            data_horario__range=(inicio_do_dia, fim_do_dia)
-        ).exclude(status='CA').order_by('data_horario')
-        
-        if request.user.tipo == 'funcionario' and not request.user.is_staff:
-            try:
-                perfil_funcionario = Funcionario.objects.get(user=request.user)
-                agendamentos_hoje = agendamentos_hoje.filter(funcionario=perfil_funcionario)
-            except Funcionario.DoesNotExist:
-                agendamentos_hoje = Agendamento.objects.none()
-        
-        context.update({
-            'agendamentos_hoje_count': agendamentos_hoje.count(),
-            'agendamentos_hoje_list': agendamentos_hoje,
-        })
+            data_horario__date=hoje
+        ).exclude(status='CA')
 
+        # Se for um funcionário comum, filtra apenas os agendamentos vinculados ao perfil dele
+        if not request.user.is_staff:
+            try:
+                perfil = Funcionario.objects.get(user=request.user)
+                agendamentos_hoje = agendamentos_hoje.filter(funcionario=perfil)
+            except Funcionario.DoesNotExist:
+                # Se o usuário não tiver um perfil de funcionário criado no Admin
+                agendamentos_hoje = Agendamento.objects.none()
+
+        # Variáveis que o seu HTML utiliza para o painel azul e a tabela
+        context['agendamentos_hoje_count'] = agendamentos_hoje.count()
+        context['agendamentos_hoje_list'] = agendamentos_hoje.order_by('data_horario')
+
+    # Renderiza o template enviando todos os dados organizados no 'context'
     return render(request, 'painel/dashboard.html', context)

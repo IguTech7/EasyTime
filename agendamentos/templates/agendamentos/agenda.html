@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-4">
     
-    <h2>Agenda - {{ data_selecionada|date:"d/m/Y" }}</h2>
+    <h2>Minha Agenda - {{ hoje|date:"d/m/Y" }}</h2>
 
     <div class="row mb-4 align-items-center">
         <div class="col-md-4">
@@ -15,7 +15,7 @@
                        id="id_data" 
                        name="data" 
                        class="form-control" 
-                       value="{{ data_selecionada|date:'Y-m-d' }}"
+                       value="{{ hoje|date:'Y-m-d' }}"
                        onchange="this.form.submit()">
             </form>
         </div>
@@ -28,7 +28,7 @@
         {% include 'agendamentos/tabela_agendamentos.html' with agendamentos=agendamentos %}
     {% else %}
         <div class="alert alert-info" role="alert">
-            Nenhum agendamento ativo para a data selecionada ({{ data_selecionada|date:"d/m/Y" }}).
+            Nenhum agendamento ativo para a data selecionada ({{ hoje|date:"d/m/Y" }}).
         </div>
     {% endif %}
 

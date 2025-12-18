@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from painel.views import home 
+from painel.views import dashboard as home 
 
 urlpatterns = [
     path('admin/', admin.site.urls),

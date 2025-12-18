@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1 style="text-align: center;">Novo Agendamento</h1>
+    
+    <div style="max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">O que vamos fazer?</label>
+                <select name="servico" required style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    <option value="" disabled selected>Escolha um serviço</option>
+                    {% for s in servicos %}
+                        <option value="{{ s.id }}">{{ s.nome }} - R$ {{ s.preco }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Quem vai atender?</label>
+                <select name="profissional" required style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                    {% for p in profissionais %}
+                        <option value="{{ p.id }}">{{ p.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Dia e Hora:</label>
+                <input type="datetime-local" name="data_horario" required style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary" style="flex: 2;">Confirmar</button>
+                <a href="{% url 'painel:dashboard' %}" class="btn btn-outline" style="flex: 1; text-align: center;">Voltar</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -34,7 +34,7 @@
             <div class="col-md-4">
                 <div class="card p-3 shadow bg-primary text-white border-0 h-100 d-flex flex-column justify-content-center align-items-center">
                     <h4 class="card-title">Novo Agendamento</h4>
-                    <a href="{% url 'agendamentos:criar' %}" class="btn btn-light mt-2">Agendar Agora</a>
+                    <a href="{% url 'agendamentos:criar_agendamento' %}" class="btn btn-light mt-2">Agendar Agora</a>
                 </div>
             </div>
         </div>
@@ -48,7 +48,7 @@
                     <p class="card-text m-0">Duração: {{ servico.duracao }} minutos</p>
                     <p class="card-text">Preço: R$ {{ servico.preco|floatformat:2 }}</p>
                     <div class="mt-auto">
-                        <a href="{% url 'agendamentos:criar' %}?servico={{ servico.pk }}" class="btn btn-sm btn-outline-success w-100">Agendar Este Serviço</a>
+                        <a href="{% url 'agendamentos:criar_agendamento' %}?servico={{ servico.pk }}" class="btn btn-sm btn-outline-success w-100">Agendar Este Serviço</a>
                     </div>
                 </div>
             </div>
@@ -64,7 +64,7 @@
             <div class="alert alert-info">Você não possui agendamentos futuros. Agende um serviço agora!</div>
         {% endif %}
 
-    {% elif request.user.tipo == 'funcionario' or request.user.is_staff %}
+    {% elif request.user.tipo == 'profissional' or request.user.is_staff %}
         <p class="mb-4">Painel de Administração e Gestão de Agendamentos</p>
 
         <div class="row mb-5">
@@ -78,11 +78,15 @@
         </div>
 
         <h4 class="mb-3">Próximos Agendamentos (Hoje)</h4>
-        {% if agendamentos_hoje_list %}
-            {% include 'agendamentos/tabela_agendamentos.html' with agendamentos=agendamentos_hoje_list %}
-        {% else %}
-            <div class="alert alert-success">Nenhum agendamento ativo para hoje.</div>
-        {% endif %}
+       {% for agendamento in agendamentos_hoje_list %}
+    <tr>
+        <td>{{ agendamento.data_horario|date:"H:i" }}</td>
+        <td>{{ agendamento.usuario.get_full_name }}</td>
+        <td>{{ agendamento.servico.nome }}</td>
+    </tr>
+{% empty %}
+    <div class="alert alert-success">Nenhum agendamento ativo para hoje.</div>
+{% endfor %}
 
     {% endif %}
     

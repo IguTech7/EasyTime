@@ -143,61 +143,45 @@ def listar_agendamentos_cliente(request):
     }
     return render(request, 'agendamentos/listar_agendamentos_cliente.html', context)
 
-@never_cache
-@login_required(login_url='usuarios:login')
-@user_passes_test(is_funcionario_or_staff, login_url='/painel/')
+@login_required
 def agenda_do_dia(request):
-    data_selecionada = date.today()
+    # 1. Pega a data da URL (ex: ?data=2024-12-19). Se não tiver, usa a de hoje.
     data_param = request.GET.get('data')
-    
     if data_param:
         try:
             data_selecionada = datetime.strptime(data_param, '%Y-%m-%d').date()
         except ValueError:
-            messages.error(request, "Formato de data inválido. Exibindo agenda de hoje.")
-
-    inicio_do_dia = datetime.combine(data_selecionada, time.min)
-    fim_do_dia = datetime.combine(data_selecionada, time.max)
-
+            data_selecionada = date.today()
+    else:
+        data_selecionada = date.today()
+    
+    # 2. Busca agendamentos DA DATA SELECIONADA
     agendamentos = Agendamento.objects.filter(
-        data_horario__range=(inicio_do_dia, fim_do_dia)
+        data_horario__date=data_selecionada
     ).exclude(status='CA').order_by('data_horario')
 
-    if request.user.tipo == 'funcionario' and not request.user.is_staff:
+    # 3. Filtra pelo funcionário logado
+    if request.user.tipo == 'funcionario':
         try:
-            perfil_funcionario = Funcionario.objects.get(user=request.user)
-            agendamentos = agendamentos.filter(funcionario=perfil_funcionario)
+            perfil = Funcionario.objects.get(user=request.user)
+            agendamentos = agendamentos.filter(funcionario=perfil)
         except Funcionario.DoesNotExist:
             agendamentos = Agendamento.objects.none()
 
     context = {
         'agendamentos': agendamentos,
+        'hoje': data_selecionada,  # Isso fará o título mostrar "19/12/2024"
         'data_selecionada': data_selecionada,
     }
     return render(request, 'agendamentos/agenda.html', context)
 
-@login_required(login_url='usuarios:login')
+@login_required
 def cancelar_agendamento(request, pk):
-    
-    if request.user.is_staff or request.user.tipo == 'funcionario':
-        agendamento = get_object_or_404(Agendamento, pk=pk)
-        redirect_url = 'agendamentos:agenda'
-    else:
-        agendamento = get_object_or_404(Agendamento, pk=pk, usuario=request.user)
-        redirect_url = 'agendamentos:listar'
-    
-    if agendamento.status != STATUS_CANCELADO:
-        agendamento.status = STATUS_CANCELADO
-        agendamento.save()
-        
-        if request.user.is_staff or request.user.tipo == 'funcionario':
-            messages.success(request, f'Agendamento do cliente {agendamento.usuario.username} cancelado com sucesso.')
-        else:
-            messages.success(request, f'Seu agendamento do serviço "{agendamento.servico.nome}" foi cancelado com sucesso.')
-    else:
-        messages.warning(request, 'Este agendamento já estava cancelado.')
-        
-    return redirect(redirect_url)
+    agendamento = get_object_or_404(Agendamento, pk=pk)
+    agendamento.status = 'CA'  # 'CA' para Cancelado
+    agendamento.save()
+    messages.success(request, "Agendamento cancelado.")
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('agendamentos:agenda')))
 
 @login_required(login_url='usuarios:login')
 @user_passes_test(lambda u: u.is_staff or u.tipo == 'funcionario', login_url='/painel/')
@@ -212,17 +196,12 @@ def marcar_como_realizado(request, pk):
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('painel:dashboard')))
 
-@login_required(login_url='usuarios:login')
-@user_passes_test(lambda u: u.is_staff or u.tipo == 'funcionario', login_url='/painel/')
+@login_required
 def confirmar_agendamento(request, pk):
     if request.method == 'POST':
         agendamento = get_object_or_404(Agendamento, pk=pk)
-        
-        if agendamento.status == 'PE':
-            agendamento.status = 'AG'
-            agendamento.save()
-            messages.success(request, f"Agendamento de {agendamento.usuario.get_full_name()} CONFIRMADO com sucesso.")
-        else:
-            messages.error(request, "Este agendamento já está confirmado ou não está Pendente.")
-    
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('painel:dashboard')))
+        agendamento.status = 'AG'  # 'AG' para Agendado/Confirmado
+        agendamento.save()
+        messages.success(request, "Agendamento confirmado!")
+    # Redireciona de volta para a agenda com a mesma data selecionada
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('agendamentos:agenda')))
