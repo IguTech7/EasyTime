@@ -15,7 +15,7 @@ class AgendamentoForm(forms.ModelForm):
 
     funcionario = forms.ModelChoiceField(
         queryset=Funcionario.objects.all(), 
-        empty_label="Selecione um Funcionário",
+        empty_label="Selecione um Profissional",
         widget=forms.Select(attrs={'class': 'form-select'}),
         label="Profissional"
     )

@@ -22,7 +22,7 @@ class CustomUserCreationForm(UserCreationForm):
     
     OPCOES_CADASTRO = [
         ('cliente', 'Cliente'),
-        ('funcionario', 'Funcionário'),
+        ('profissional', 'Profissional'),
     ]
     
     tipo = forms.ChoiceField(
