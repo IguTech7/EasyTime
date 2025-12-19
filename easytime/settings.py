@@ -87,4 +87,4 @@ AUTH_USER_MODEL = 'usuarios.CustomUser'
 
 LOGIN_URL = 'usuarios:login'
 LOGIN_REDIRECT_URL = 'painel:dashboard'
-LOGOUT_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'painel:dashboard'

@@ -4,50 +4,70 @@ from agendamentos.models import Agendamento
 from funcionarios.models import Funcionario
 from servicos.models import Servico
 from django.utils import timezone
-from datetime import date
+from datetime import datetime
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
+from servicos.models import Servico
+from funcionarios.models import Funcionario
 
 @login_required
 def dashboard(request):
-    # Pega a data e hora atual do servidor local (Brasil)
-    agora = timezone.localtime(timezone.now())
-    hoje = agora.date()
-    context = {}
+    user = request.user
+    hoje = timezone.now().date()
+    
+    data_get = request.GET.get('data')
+    
+    if data_get:
+        try:
+            data_selecionada = datetime.strptime(data_get, '%Y-%m-%d').date()
+        except ValueError:
+            data_selecionada = hoje
+    else:
+        data_selecionada = hoje
 
-    # --- LÓGICA PARA CLIENTE ---
-    if request.user.tipo == 'cliente':
-        # Busca agendamentos do cliente logado que NÃO foram cancelados
-        agendamentos_cliente = Agendamento.objects.filter(
-            usuario=request.user
-        ).exclude(status='CA')
+    if user.tipo == 'cliente':
+        agendamentos = Agendamento.objects.filter(usuario=user).order_by('data_horario')
+        template = 'painel/dashboard_cliente.html'
+    else:
+        agendamentos = Agendamento.objects.filter(
+            funcionario__user=user, 
+            data_horario__date=data_selecionada
+        ).order_by('data_horario')
+        template = 'painel/dashboard_funcionario.html'
 
-        # Filtra apenas agendamentos de hoje para o futuro
-        futuros = agendamentos_cliente.filter(data_horario__date__gte=hoje)
+    context = {
+        'agendamentos': agendamentos,
+        'total_futuros': agendamentos.count(),
+        'servicos_disponiveis': Servico.objects.all(),
+        'perfil_funcionario': getattr(user, 'funcionario', None),
+        'data_hoje': hoje,
+        'data_selecionada': data_selecionada,
+    }
+    return render(request, template, context)
+
+@login_required
+def atualizar_perfil_profissional(request):
+    if request.method == 'POST':
+        perfil = get_object_or_404(Funcionario, user=request.user)
         
-        # Variáveis que o seu HTML utiliza
-        context['total_futuros'] = futuros.count()
-        context['proximo_agendamento'] = futuros.order_by('data_horario').first()
-        context['proximos_agendamentos'] = futuros.order_by('data_horario') # Para a lista lá de baixo
-        context['servicos_disponiveis'] = Servico.objects.all()
+        servicos_escolhidos = request.POST.getlist('especialidades')
+        
+        perfil.especialidades.set(servicos_escolhidos)
+        
+        messages.success(request, "Perfil e especialidades atualizados com sucesso!")
+        return redirect('painel:dashboard')
+    
+    return redirect('painel:dashboard')
 
-    # --- LÓGICA PARA PROFISSIONAL / FUNCIONÁRIO / STAFF ---
-    elif request.user.tipo == 'funcionario' or request.user.tipo == 'profissional' or request.user.is_staff:
-        # Busca todos os agendamentos do dia atual (independente da hora)
-        agendamentos_hoje = Agendamento.objects.filter(
-            data_horario__date=hoje
-        ).exclude(status='CA')
-
-        # Se for um funcionário comum, filtra apenas os agendamentos vinculados ao perfil dele
-        if not request.user.is_staff:
-            try:
-                perfil = Funcionario.objects.get(user=request.user)
-                agendamentos_hoje = agendamentos_hoje.filter(funcionario=perfil)
-            except Funcionario.DoesNotExist:
-                # Se o usuário não tiver um perfil de funcionário criado no Admin
-                agendamentos_hoje = Agendamento.objects.none()
-
-        # Variáveis que o seu HTML utiliza para o painel azul e a tabela
-        context['agendamentos_hoje_count'] = agendamentos_hoje.count()
-        context['agendamentos_hoje_list'] = agendamentos_hoje.order_by('data_horario')
-
-    # Renderiza o template enviando todos os dados organizados no 'context'
-    return render(request, 'painel/dashboard.html', context)
+@login_required
+def atualizar_especialidades(request):
+    if request.method == 'POST':
+        perfil = get_object_or_404(Funcionario, user=request.user)
+        
+        servicos_ids = request.POST.getlist('especialidades')
+        
+        perfil.especialidades.set(servicos_ids)
+        
+        messages.success(request, "Suas especialidades foram atualizadas!")
+    
+    return redirect('painel:dashboard')

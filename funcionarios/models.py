@@ -1,24 +1,22 @@
 from django.db import models
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+from django.conf import settings
+from servicos.models import Servico 
 
 class Funcionario(models.Model):
-    class Status(models.TextChoices):
-        ATIVO = 'AT', 'Ativo'
-        INATIVO = 'IN', 'Inativo'
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nome = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    telefone = models.CharField(max_length=20)
-    especialidade = models.CharField(max_length=100)
-    data_contratacao = models.DateField(auto_now_add=True)
-    status = models.CharField(
-        max_length=2,
-        choices=Status.choices,
-        default=Status.ATIVO
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='perfil_funcionario'
     )
     
+    especialidades = models.ManyToManyField(
+        Servico, 
+        blank=True, 
+        related_name='funcionarios_especialistas'
+    )
+    
+    telefone = models.CharField(max_length=21, blank=True, null=True)
+    foto = models.ImageField(upload_to='funcionarios/', blank=True, null=True)
+
     def __str__(self):
-        return self.nome
+        return self.user.username

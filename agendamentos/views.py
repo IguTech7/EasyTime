@@ -145,35 +145,20 @@ def listar_agendamentos_cliente(request):
 
 @login_required
 def agenda_do_dia(request):
-    # 1. Pega a data da URL (ex: ?data=2024-12-19). Se não tiver, usa a de hoje.
-    data_param = request.GET.get('data')
-    if data_param:
-        try:
-            data_selecionada = datetime.strptime(data_param, '%Y-%m-%d').date()
-        except ValueError:
-            data_selecionada = date.today()
+    # Se for um superusuário (Admin), ele pode ver tudo
+    if request.user.is_staff:
+        agendamentos = Agendamento.objects.all()
     else:
-        data_selecionada = date.today()
-    
-    # 2. Busca agendamentos DA DATA SELECIONADA
-    agendamentos = Agendamento.objects.filter(
-        data_horario__date=data_selecionada
-    ).exclude(status='CA').order_by('data_horario')
-
-    # 3. Filtra pelo funcionário logado
-    if request.user.tipo == 'funcionario':
         try:
+            # Busca o perfil de funcionário ligado ao usuário logado
             perfil = Funcionario.objects.get(user=request.user)
-            agendamentos = agendamentos.filter(funcionario=perfil)
+            # FILTRO CRÍTICO: Puxa apenas agendamentos onde o funcionário é o perfil logado
+            agendamentos = Agendamento.objects.filter(funcionario=perfil)
         except Funcionario.DoesNotExist:
+            # Se não for funcionário nem admin, não vê nada
             agendamentos = Agendamento.objects.none()
 
-    context = {
-        'agendamentos': agendamentos,
-        'hoje': data_selecionada,  # Isso fará o título mostrar "19/12/2024"
-        'data_selecionada': data_selecionada,
-    }
-    return render(request, 'agendamentos/agenda.html', context)
+    return render(request, 'agendamentos/agenda.html', {'agendamentos': agendamentos})
 
 @login_required
 def cancelar_agendamento(request, pk):
@@ -205,3 +190,4 @@ def confirmar_agendamento(request, pk):
         messages.success(request, "Agendamento confirmado!")
     # Redireciona de volta para a agenda com a mesma data selecionada
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('agendamentos:agenda')))
+

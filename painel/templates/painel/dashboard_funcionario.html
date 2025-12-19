@@ -1,45 +1,92 @@
 {% extends 'painel/base.html' %}
-{% load static %}
-
-{% block title %}Agenda Rápida{% endblock %}
-
 {% block content %}
-    
-    <h2 class="mb-4">
-        <i class="fas fa-calendar-day me-2 text-primary"></i>Dashboard do Funcionário
-    </h2>
+<div class="container mt-4">
+    <h2 class="fw-bold">Painel do Profissional</h2>
+    <p class="text-muted">Olá, <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>! Gerencie sua agenda.</p>
 
-    <div class="alert alert-info p-3 shadow-sm mb-4">
-        <i class="fas fa-user-tie me-2"></i>
-        Bem-vindo(a), {{ request.user.first_name|default:request.user.username }}!
-        Seu foco é na <a href="{% url 'agendamentos:agenda' %}" class="alert-link fw-bold">Agenda de Hoje</a>.
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm p-4 text-center bg-primary text-white">
-                <h5 class="card-title fw-bold">Ver Agendamentos de Hoje</h5>
-                <p class="card-text">Clique para gerenciar seus serviços agendados para este dia.</p>
-                <a href="{% url 'agendamentos:agenda' %}" class="btn btn-light btn-lg mt-3">
-                    <i class="fas fa-clock me-2"></i> Abrir Minha Agenda
-                </a>
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-             <div class="card shadow-sm p-4 text-center">
-                <h5 class="card-title text-muted">Próximos 7 Dias</h5>
-                <p class="display-4 fw-bold text-secondary">0</p>
-                <p class="text-muted">Agendamentos próximos</p>
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm border-0 text-white" style="background: linear-gradient(45deg, #198754, #146c43); border-radius: 20px;">
+                <h6 class="opacity-75">Agendamentos para: {{ data_selecionada|date:"d/m" }}</h6>
+                <p class="display-4 fw-bold mb-0">{{ total_clientes }}</p>
             </div>
         </div>
     </div>
-    
-    <h3 class="mb-3">Configurações Rápidas</h3>
-    <div class="card shadow-sm p-4">
-        <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-cog me-2"></i> Acessar Painel de Administração
-        </a>
+
+    <div class="card p-3 shadow-sm border-0 mb-4" style="border-radius: 15px; background-color: #f8f9fa;">
+        <form method="GET" class="row align-items-end">
+            <div class="col-md-4">
+                <label for="data" class="form-label fw-bold text-muted">Selecionar Data da Agenda</label>
+                <input type="date" name="data" id="data" class="form-control" value="{{ data_selecionada|date:'Y-m-d'|default:data_hoje|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Consultar</button>
+            </div>
+            <div class="col-md-2">
+                <a href="?" class="btn btn-outline-secondary w-100">Hoje</a>
+            </div>
+        </form>
     </div>
 
+    <h4 class="fw-bold mb-3">Minha Agenda: {{ data_selecionada|date:"d/m/Y" }}</h4>
+    <div class="card shadow-sm border-0 mb-5" style="border-radius: 15px; overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4 text-start">Cliente</th>
+                        <th>Serviço</th>
+                        <th>Horário</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in agendamentos %}
+                    <tr>
+                        <td class="ps-4 text-start"><strong>{{ a.usuario.get_full_name|default:a.usuario.username }}</strong></td>
+                        <td>{{ a.servico.nome }}</td>
+                        <td><span class="badge bg-light text-dark fs-6">{{ a.data_horario|date:"H:i" }}</span></td>
+                        <td>
+                            <span class="badge rounded-pill {% if a.status == 'confirmado' %}bg-primary{% elif a.status == 'realizado' %}bg-success{% elif a.status == 'cancelado' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                {{ a.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group gap-1">
+                                <a href="/agendamentos/detalhes/{{ a.id }}/" class="btn btn-sm btn-outline-primary">Detalhes</a>
+                                
+                                {% if a.status != 'cancelado' %}
+                                    <a href="/agendamentos/cancelar/{{ a.id }}/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Deseja cancelar?')">Cancelar</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center py-5 text-muted">Nenhum cliente agendado para esta data.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card p-4 shadow-sm border-0 rounded-4">
+        <h4 class="fw-bold mb-3">Minhas Especialidades</h4>
+        <form method="POST" action="{% url 'painel:atualizar_especialidades' %}">
+            {% csrf_token %}
+            <div class="row">
+                {% for servico in servicos_disponiveis %}
+                <div class="col-md-3 mb-2">
+                    <div class="form-check form-switch border p-2 rounded-3">
+                        <input class="form-check-input ms-0 me-2" type="checkbox" name="especialidades" value="{{ servico.pk }}" 
+                            {% if servico in perfil_funcionario.especialidades.all %}checked{% endif %}>
+                        <label class="form-check-label">{{ servico.nome }}</label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-success mt-3 px-4">Atualizar Meus Serviços</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

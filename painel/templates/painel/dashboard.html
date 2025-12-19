@@ -3,92 +3,164 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
+<style>
+    /* CSS para deixar o visual mais moderno */
+    .card-resumo {
+        border-radius: 15px;
+        transition: transform 0.2s;
+        background: linear-gradient(45deg, #0d6efd, #0046af);
+    }
+    .card-resumo:hover { transform: translateY(-5px); }
+    .table-container {
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .badge-status {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+    .table thead th {
+        background-color: #f8f9fa;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        color: #6c757d;
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
+
 <div class="container mt-4">
-    <h2>Dashboard</h2>
-    <h3 class="mb-4">Bem-vindo(a), {{ request.user.get_full_name|default:request.user.username }}!</h3>
-    
-    {% if request.user.tipo == 'cliente' %}
-        
-        <div class="row mb-5">
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0 h-100">
-                    <h5 class="card-title text-muted">Total de Agendamentos Futuros</h5>
-                    <p class="display-4 text-primary">{{ total_futuros|default:0 }}</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0 h-100">
-                    <h5 class="card-title text-muted">Próximo Agendamento</h5>
-                    {% if proximo_agendamento %}
-                        <p class="card-text">
-                            <strong>{{ proximo_agendamento.servico.nome }}</strong><br>
-                            {{ proximo_agendamento.data_horario|date:"d/m/Y H:i" }}
-                        </p>
-                    {% else %}
-                        <p class="card-text text-muted">Nenhum registro encontrado.</p>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="card p-3 shadow bg-primary text-white border-0 h-100 d-flex flex-column justify-content-center align-items-center">
-                    <h4 class="card-title">Novo Agendamento</h4>
-                    <a href="{% url 'agendamentos:criar_agendamento' %}" class="btn btn-light mt-2">Agendar Agora</a>
-                </div>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Dashboard</h2>
+            <p class="text-muted">Bem-vindo(a), <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>!</p>
         </div>
-        
-        <h4 class="mb-3">Nossos Serviços Disponíveis</h4>
-        <div class="row mb-5">
-            {% for servico in servicos_disponiveis %}
-            <div class="col-md-4 mb-4">
-                <div class="card p-3 h-100 shadow-sm">
-                    <h5 class="card-title text-success">{{ servico.nome }}</h5>
-                    <p class="card-text m-0">Duração: {{ servico.duracao }} minutos</p>
-                    <p class="card-text">Preço: R$ {{ servico.preco|floatformat:2 }}</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'agendamentos:criar_agendamento' %}?servico={{ servico.pk }}" class="btn btn-sm btn-outline-success w-100">Agendar Este Serviço</a>
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <div class="col-12"><div class="alert alert-info">Nenhum serviço cadastrado.</div></div>
-            {% endfor %}
-        </div>
-        
-        <h4 class="mb-3">Próximos Agendamentos</h4>
-        {% if proximos_agendamentos %}
-            <a href="{% url 'agendamentos:listar' %}" class="btn btn-secondary btn-sm mb-3">Ver Todos os Detalhes</a>
-        {% else %}
-            <div class="alert alert-info">Você não possui agendamentos futuros. Agende um serviço agora!</div>
+        {% if request.user.tipo == 'cliente' %}
+            <a href="/agendamentos/agendar/" class="btn btn-primary shadow-sm px-4">Novo Agendamento</a>
         {% endif %}
+    </div>
 
-    {% elif request.user.tipo == 'profissional' or request.user.is_staff %}
-        <p class="mb-4">Painel de Administração e Gestão de Agendamentos</p>
-
-        <div class="row mb-5">
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm bg-primary text-white border-0 h-100">
-                    <h4 class="card-title">Agendamentos Hoje</h4>
-                    <p class="display-4">{{ agendamentos_hoje_count }}</p>
-                    <a href="{% url 'agendamentos:agenda' %}" class="btn btn-light mt-2">Ver Agenda Completa</a>
-                </div>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>
-
-        <h4 class="mb-3">Próximos Agendamentos (Hoje)</h4>
-       {% for agendamento in agendamentos_hoje_list %}
-    <tr>
-        <td>{{ agendamento.data_horario|date:"H:i" }}</td>
-        <td>{{ agendamento.usuario.get_full_name }}</td>
-        <td>{{ agendamento.servico.nome }}</td>
-    </tr>
-{% empty %}
-    <div class="alert alert-success">Nenhum agendamento ativo para hoje.</div>
-{% endfor %}
-
+        {% endfor %}
     {% endif %}
     
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card card-resumo p-4 shadow-sm border-0 h-100 text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 opacity-75">Agendamentos Futuros</h6>
+                        <p class="display-4 fw-bold mb-0">{{ total_futuros|default:0 }}</p>
+                    </div>
+                    <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if request.user.tipo == 'cliente' %}
+        <h4 class="mb-4 fw-bold">Meus Agendamentos e Status</h4>
+        <div class="table-container mb-5">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3">Profissional</th>
+                            <th>Serviço</th>
+                            <th>Data e Hora</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in agendamentos_cliente %}
+                        <tr>
+                            <td class="px-4"><strong>{{ a.funcionario.user.get_full_name|default:a.funcionario.user.username }}</strong></td>
+                            <td>{{ a.servico.nome }}</td>
+                            <td>{{ a.data_horario|date:"d/m/Y H:i" }}</td>
+                            <td class="text-center">
+                                {% if a.status == 'confirmado' %}
+                                    <span class="badge bg-success badge-status">Confirmado</span>
+                                {% elif a.status == 'cancelado' %}
+                                    <span class="badge bg-danger badge-status">Cancelado</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark badge-status">Pendente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center py-5 text-muted">Nenhum agendamento encontrado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    {% elif request.user.tipo == 'funcionario' or request.user.is_staff %}
+        <h4 class="mb-4 fw-bold">Próximos Agendamentos (Hoje)</h4>
+        <div class="table-container mb-5">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3">Hora</th>
+                            <th>Cliente</th>
+                            <th>Serviço</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in agendamentos_hoje_list %}
+                        <tr>
+                            <td class="px-4">{{ a.data_horario|date:"H:i" }}</td>
+                            <td>{{ a.usuario.get_full_name|default:a.usuario.username }}</td>
+                            <td>{{ a.servico.nome }}</td>
+                            <td class="text-center">
+                                {% if a.status == 'confirmado' %}
+                                    <span class="badge bg-success badge-status">Confirmado</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark badge-status">Pendente</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center py-5 text-muted">Nenhum agendamento para hoje.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card p-4 shadow-sm border-0 mb-5 rounded-4">
+            <h4 class="fw-bold mb-3">Minhas Especialidades</h4>
+            <p class="text-muted">Marque os serviços que você realiza.</p>
+            <form method="POST" action="{% url 'painel:atualizar_especialidades' %}">
+                {% csrf_token %}
+                <div class="row">
+                    {% for servico in servicos_disponiveis %}
+                    <div class="col-md-3 mb-2">
+                        <div class="form-check form-switch p-2 border rounded-3 mx-1">
+                            <input class="form-check-input ms-0 me-2" type="checkbox" name="especialidades" value="{{ servico.pk }}" 
+                                id="s{{ servico.pk }}" 
+                                {% if servico in perfil_funcionario.especialidades.all %}checked{% endif %}>
+                            <label class="form-check-label" for="s{{ servico.pk }}">{{ servico.nome }}</label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary mt-3 px-4">Salvar Especialidades</button>
+            </form>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
+
